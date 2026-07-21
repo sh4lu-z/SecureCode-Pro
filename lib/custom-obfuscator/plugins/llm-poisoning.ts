@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Advanced Anti-LLM Context Flooding Plugin
  * Copyright (c) 2026 Shaluka Gimhan (sh4lu-z / syntiox)
@@ -10,7 +11,7 @@
  * difficult to distinguish real logic from fake logic.
  */
 
-import type { PluginObj } from '@babel/core';
+// @ts-ignore
 import * as t from '@babel/types';
 
 interface FakeFunction {
@@ -225,7 +226,7 @@ function buildFakeFunctions(): FakeFunction[] {
   ];
 }
 
-export default function llmPoisoningPlugin(): PluginObj {
+export default function llmPoisoningPlugin(): any {
   return {
     name: 'syntiox-llm-poisoning',
     visitor: {

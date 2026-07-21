@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Opaque Predicates & Dead Code Injection Plugin
  * Copyright (c) 2026 Shaluka Gimhan (sh4lu-z / syntiox)
@@ -9,7 +10,7 @@
  * that require symbolic analysis to prove dead — which WebCrack cannot do.
  */
 
-import type { PluginObj } from '@babel/core';
+// @ts-ignore
 import * as t from '@babel/types';
 
 const FAKE_VAR_NAMES = [
@@ -174,7 +175,7 @@ function generateAlwaysTruePredicate(varName: string): {
   return predicates[Math.floor(Math.random() * predicates.length)]();
 }
 
-export default function opaquePredicatesPlugin(): PluginObj {
+export default function opaquePredicatesPlugin(): any {
   return {
     name: 'syntiox-opaque-predicates',
     visitor: {
