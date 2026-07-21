@@ -2,7 +2,11 @@
 
 import React, { useState, useRef, useMemo } from 'react';
 import JSZip from 'jszip';
-import { Archive, FileCode } from 'lucide-react';
+import { 
+  Archive, FileCode, Copy, Check, Shield, 
+  Zap, Settings, Cpu, Lock, AlertTriangle, Info,
+  FolderOpen, FileJson, FileText, ChevronDown, Folder, Code2
+} from 'lucide-react';
 
 type FileNode = {
   path: string;
@@ -18,13 +22,21 @@ type FileNode = {
 };
 
 const formatSize = (bytes: number) => {
-  if (bytes < 1024) return bytes + 'b';
-  return (bytes / 1024).toFixed(0) + 'kb';
+  if (bytes < 1024) return bytes + ' B';
+  return (bytes / 1024).toFixed(1) + ' KB';
 };
 
-const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
-  <div onClick={onChange} className={`w-8 h-4 rounded-full relative cursor-pointer transition-colors ${checked ? 'bg-emerald-600' : 'bg-zinc-700'}`}>
-    <div className={`absolute top-0.5 w-3 h-3 rounded-full transition-all ${checked ? 'right-0.5 bg-white' : 'left-0.5 bg-zinc-400'}`}></div>
+const Toggle = ({ checked, onChange, label, description }: { checked: boolean; onChange: () => void, label?: string, description?: string }) => (
+  <div className="flex justify-between items-center w-full group cursor-pointer" onClick={onChange}>
+    {label && (
+      <div className="flex flex-col pr-4">
+        <span className="text-sm font-medium text-zinc-200 group-hover:text-emerald-400 transition-colors">{label}</span>
+        {description && <span className="text-xs text-zinc-500 mt-0.5">{description}</span>}
+      </div>
+    )}
+    <div className={`w-10 h-5 shrink-0 rounded-full relative transition-all duration-300 ease-in-out shadow-inner ${checked ? 'bg-emerald-500 shadow-emerald-500/20' : 'bg-zinc-800 border border-zinc-700/50'}`}>
+      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all duration-300 ease-in-out ${checked ? 'left-5' : 'left-0.5 opacity-70'}`}></div>
+    </div>
   </div>
 );
 
@@ -36,6 +48,7 @@ export default function JSObfuscatorPro() {
   const [globalStatus, setGlobalStatus] = useState('READY');
   const [stats, setStats] = useState('NODES: 0 | TIME: 0.0s | MEMORY: 0MB');
   const [isObfuscating, setIsObfuscating] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // File State
   const [files, setFiles] = useState<FileNode[]>([]);
@@ -74,7 +87,7 @@ export default function JSObfuscatorPro() {
 
   const createSnippet = () => {
     zipRef.current = null;
-    const initialContent = '// ඔබේ Javascript කේතය මෙහි Paste කරන්න...\n// තනි කේතයක් නම් පමණක් මෙය භාවිතා කරන්න (ZIP අනවශ්‍යයි)\n\nfunction example() {\n  console.log("Hello World");\n}\n';
+    const initialContent = '// Paste your Javascript code here...\n// Use this only for a single snippet (ZIP not required)\n\nfunction example() {\n  console.log("Hello World");\n}\n';
     setFiles([{
       path: '/snippet.js',
       name: 'snippet.js',
@@ -403,6 +416,12 @@ export default function JSObfuscatorPro() {
     setGlobalStatus('DONE');
   };
 
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(activeContent);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   // Group files by directory
   const groupedFiles = useMemo(() => {
     const groups: Record<string, FileNode[]> = {};
@@ -424,49 +443,72 @@ export default function JSObfuscatorPro() {
 
   const selectedFile = files.find(f => f.path === selectedPath);
   const activeContent = selectedFile 
-    ? (activeTab === 'original' ? selectedFile.content : selectedFile.obfuscatedContent || '/* No Obfuscated output yet. Please run OBFUSCATE. */')
-    : '// Please select a file from the ZIP structure to see its contents.';
+    ? (activeTab === 'original' ? selectedFile.content : selectedFile.obfuscatedContent || '/* No Obfuscated output yet. Please click OBFUSCATE NOW. */')
+    : '// Please select a file from the explorer to view its contents.';
   
   const contentLines = activeContent.split('\n');
-  const displayLinesCount = Math.min(contentLines.length, 1000); // Caps line numbers render for performance
+  const displayLinesCount = Math.min(contentLines.length, 1000);
 
   return (
-    <div className="w-full h-screen min-h-screen bg-[#09090b] text-zinc-300 font-sans flex flex-col overflow-hidden select-none">
+    <div className="w-full h-screen min-h-screen bg-[#030712] text-zinc-300 font-sans flex flex-col overflow-hidden selection:bg-emerald-500/30">
       
       {/* HEADER */}
-      <header className="shrink-0 h-14 border-b border-zinc-800 flex items-center justify-between px-6 bg-[#111114]">
+      <header className="shrink-0 h-16 border-b border-white/5 flex items-center justify-between px-6 bg-zinc-950/80 backdrop-blur-md z-50">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center text-black font-bold">JS</div>
-          <h1 className="text-lg font-semibold tracking-tight text-white">
-            JS-OBFUSCATOR <span className="text-emerald-500 text-sm font-mono">PRO v2.4</span>
-          </h1>
+          <div className="w-9 h-9 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-lg flex items-center justify-center text-white font-bold shadow-[0_0_15px_rgba(16,185,129,0.4)]">
+            <Shield className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+              JS-OBFUSCATOR <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-mono border border-emerald-500/20">PRO v2.4</span>
+            </h1>
+            <p className="text-[10px] text-zinc-500 font-medium tracking-wide">ENTERPRISE-GRADE JAVASCRIPT PROTECTION</p>
+          </div>
         </div>
+        
         <div className="flex gap-4 items-center">
-          <div className="text-xs text-zinc-500 font-mono">STATUS: {globalStatus}</div>
+          <div className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-full bg-zinc-900/50 border border-white/5 text-xs text-zinc-400 font-mono shadow-inner">
+            <span className="relative flex h-2 w-2">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${globalStatus === 'READY' || globalStatus === 'DONE' ? 'bg-emerald-400' : 'bg-amber-400'}`}></span>
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${globalStatus === 'READY' || globalStatus === 'DONE' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+            </span>
+            STATUS: <span className="text-zinc-200">{globalStatus}</span>
+          </div>
           
+          <div className="h-6 w-px bg-white/10 mx-2"></div>
+
           <button 
             onClick={createSnippet}
             disabled={isObfuscating}
-            className="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white rounded text-sm transition-colors border border-zinc-700 flex items-center gap-2"
+            className="px-4 py-2 bg-zinc-900/80 hover:bg-zinc-800 disabled:opacity-50 text-zinc-300 rounded-lg text-sm transition-all border border-white/5 hover:border-white/10 hover:shadow-lg flex items-center gap-2 font-medium"
           >
-            <FileCode className="w-4 h-4" /> Code එක Paste කරන්න
+            <FileCode className="w-4 h-4 text-zinc-400" /> New Snippet
           </button>
           
           <input type="file" accept=".zip" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
           <button 
             onClick={() => fileInputRef.current?.click()}
             disabled={isObfuscating}
-            className="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white rounded text-sm transition-colors border border-zinc-700 flex items-center gap-2"
+            className="px-4 py-2 bg-zinc-900/80 hover:bg-zinc-800 disabled:opacity-50 text-zinc-300 rounded-lg text-sm transition-all border border-white/5 hover:border-white/10 hover:shadow-lg flex items-center gap-2 font-medium"
           >
-            <Archive className="w-4 h-4" /> ZIP අප්ලෝඩ් කරන්න
+            <Archive className="w-4 h-4 text-zinc-400" /> Upload ZIP
           </button>
           
           <button 
             disabled={isObfuscating || files.length === 0}
             onClick={startObfuscation}
-            className="px-6 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:bg-zinc-700 text-white rounded text-sm font-bold shadow-lg shadow-emerald-900/20 transition-all"
+            className="relative overflow-hidden px-6 py-2 bg-emerald-600 disabled:opacity-50 disabled:bg-zinc-800 text-white rounded-lg text-sm font-bold shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] transition-all flex items-center gap-2 group border border-emerald-500/50 hover:border-emerald-400 disabled:border-transparent disabled:shadow-none"
           >
-            {isObfuscating ? 'OBFUSCATING...' : 'OBFUSCATE දැන්ම'}
+            {isObfuscating ? (
+              <span className="flex items-center gap-2">
+                <Settings className="w-4 h-4 animate-spin" /> PROCESSING...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <Zap className="w-4 h-4 group-hover:scale-110 transition-transform text-emerald-200" /> OBFUSCATE NOW
+              </span>
+            )}
+            {!isObfuscating && <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>}
           </button>
         </div>
       </header>
@@ -475,187 +517,209 @@ export default function JSObfuscatorPro() {
       <main className="flex-1 flex overflow-hidden">
         
         {/* LEFT SIDEBAR - CONFIG */}
-        <aside className="w-[320px] lg:w-[340px] shrink-0 border-r border-zinc-800 bg-[#0d0d0f] flex flex-col">
-          <div className="p-4 border-b border-zinc-800 bg-zinc-900/30 shrink-0">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">සැකසුම් (Configuration)</h2>
-            <p className="text-[10px] text-zinc-600">AST-based transformations and protection layers.</p>
+        <aside className="w-[340px] xl:w-[380px] shrink-0 border-r border-white/5 bg-zinc-950/50 backdrop-blur-xl flex flex-col z-40 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
+          <div className="p-5 border-b border-white/5 shrink-0 flex items-center gap-3 bg-zinc-950/80">
+            <Settings className="w-5 h-5 text-zinc-400" />
+            <div>
+              <h2 className="text-sm font-bold tracking-wide text-zinc-100">Configuration</h2>
+              <p className="text-xs text-zinc-500 mt-0.5">AST-based transformation rules</p>
+            </div>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          <div className="flex-1 overflow-y-auto p-5 space-y-8 custom-scrollbar">
             
-            <div className="space-y-2 p-3 bg-zinc-900/50 rounded-lg border border-zinc-800">
-              <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Target Server RAM</label>
-              <div className="grid grid-cols-4 gap-1">
+            {/* RAM Config */}
+            <div className="space-y-3 p-4 bg-zinc-900/50 rounded-xl border border-white/5 shadow-inner">
+              <label className="flex items-center gap-2 text-xs uppercase font-bold text-zinc-400 tracking-wider">
+                <Cpu className="w-4 h-4" /> Target Server RAM
+              </label>
+              <div className="grid grid-cols-4 gap-2">
                 {['512MB', '1GB', '2GB', '4GB+'].map(ram => (
                   <button
                     key={ram}
                     onClick={() => handleRamChange(ram)}
-                    className={`text-[9px] py-1.5 rounded transition-colors ${serverRam === ram ? 'bg-emerald-600 outline outline-1 outline-emerald-500 text-white font-bold' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'}`}
+                    className={`text-xs py-2 rounded-lg transition-all font-medium ${serverRam === ram ? 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]' : 'bg-zinc-800/80 border border-transparent text-zinc-400 hover:bg-zinc-700 hover:text-zinc-200'}`}
                   >
                     {ram}
                   </button>
                 ))}
               </div>
-              <p className="text-[9px] text-zinc-600 leading-tight pt-1">Auto-adjusts obfuscation intensity to prevent memory errors.</p>
+              <p className="text-[11px] text-zinc-500 leading-relaxed pt-1">
+                Auto-adjusts obfuscation intensity to prevent memory exhaustion on target environments.
+              </p>
             </div>
 
-            <div className="space-y-5">
+            {/* Sliders */}
+            <div className="space-y-7">
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-medium text-zinc-300">String Array Encryption</label>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${stringEncNum > 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-800 text-zinc-500'}`}>
-                    {stringEncNum === 2 ? 'High' : stringEncNum === 1 ? 'Med' : 'Off'}
+                  <label className="text-sm font-medium text-zinc-200">String Array Encryption</label>
+                  <span className={`text-xs px-2 py-1 rounded-md font-medium border ${stringEncNum > 0 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-zinc-800 border-zinc-700 text-zinc-500'}`}>
+                    {stringEncNum === 2 ? 'High (Base64)' : stringEncNum === 1 ? 'Med (RC4)' : 'Off'}
                   </span>
                 </div>
-                <input type="range" min="0" max="2" value={stringEncNum} onChange={(e) => { setStringEncNum(Number(e.target.value)); setServerRam('Custom'); }} className="w-full accent-emerald-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer" />
-                <div className="flex justify-between text-[9px] text-zinc-500">
-                  <span>Off</span><span>RC4</span><span>Base64</span>
-                </div>
+                <input type="range" min="0" max="2" value={stringEncNum} onChange={(e) => { setStringEncNum(Number(e.target.value)); setServerRam('Custom'); }} className="w-full accent-emerald-500 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer" />
               </div>
 
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-medium text-zinc-300">Control Flow Flattening</label>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">{controlFlow}%</span>
+                  <label className="text-sm font-medium text-zinc-200">Control Flow Flattening</label>
+                  <span className="text-xs px-2 py-1 rounded-md font-mono bg-zinc-800 border border-zinc-700 text-zinc-300">{controlFlow}%</span>
                 </div>
-                <input type="range" min="0" max="100" step="10" value={controlFlow} onChange={(e) => { setControlFlow(Number(e.target.value)); setServerRam('Custom'); }} className="w-full accent-emerald-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer" />
+                <input type="range" min="0" max="100" step="10" value={controlFlow} onChange={(e) => { setControlFlow(Number(e.target.value)); setServerRam('Custom'); }} className="w-full accent-emerald-500 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer" />
               </div>
 
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-medium text-zinc-300">Dead Code Injection</label>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">{deadCode}%</span>
+                  <label className="text-sm font-medium text-zinc-200">Dead Code Injection</label>
+                  <span className="text-xs px-2 py-1 rounded-md font-mono bg-zinc-800 border border-zinc-700 text-zinc-300">{deadCode}%</span>
                 </div>
-                <input type="range" min="0" max="100" step="10" value={deadCode} onChange={(e) => { setDeadCode(Number(e.target.value)); setServerRam('Custom'); }} className="w-full accent-emerald-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer" />
+                <input type="range" min="0" max="100" step="10" value={deadCode} onChange={(e) => { setDeadCode(Number(e.target.value)); setServerRam('Custom'); }} className="w-full accent-emerald-500 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer" />
               </div>
             </div>
 
-            <div className="p-3 bg-red-500/5 border border-red-500/10 rounded-lg space-y-3">
-              <p className="text-[10px] text-zinc-400 leading-relaxed">
-                <strong className="text-orange-400 block mb-0.5">📝 Notice (Build Files Only):</strong> 
-                Typescript/JSX වැනි අමු කේත (raw code) මේ සඳහා යොදන්න එපා. Build කළ පසුව ඇති <code className="text-zinc-300 bg-black/50 px-1 py-0.5 rounded font-mono">dist/</code> හෝ <code className="text-zinc-300 bg-black/50 px-1 py-0.5 rounded font-mono">build/</code> ගොනු පමණක් දමන්න.
-              </p>
-              <div className="w-full h-px bg-red-500/10"></div>
-              <p className="text-[10px] text-zinc-400 leading-relaxed">
-                <strong className="text-orange-400 block mb-0.5">⚡ Vercel / Hostings:</strong> 
-                Vercel/Next.js වැනි Hosting සේවා සඳහා "Self Defending" අක්‍රීය කරන්න. (Bundlers කේතය වෙනස් කරන නිසා බිඳ වැටේ)
-              </p>
+            {/* Notices */}
+            <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl space-y-4 shadow-inner">
+              <div className="flex gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  <strong className="text-amber-500 block mb-1 text-sm">Build Files Only</strong> 
+                  Do not upload raw JSX/TSX. Only use compiled files (e.g. <code className="text-zinc-200 bg-black/50 px-1.5 py-0.5 rounded font-mono border border-white/10">dist/</code> or <code className="text-zinc-200 bg-black/50 px-1.5 py-0.5 rounded font-mono border border-white/10">build/</code>).
+                </p>
+              </div>
+              <div className="w-full h-px bg-amber-500/10"></div>
+              <div className="flex gap-3">
+                <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  <strong className="text-blue-400 block mb-1 text-sm">Vercel / Cloud Hosts</strong> 
+                  Disable "Self Defending" when deploying to platforms that auto-modify bundler code.
+                </p>
+              </div>
             </div>
 
-            <details className="group border border-zinc-800/80 rounded-lg bg-zinc-900/30 overflow-hidden" open>
-               <summary className="text-xs font-bold uppercase tracking-wider px-4 py-3 cursor-pointer select-none border-b border-transparent group-open:border-zinc-800/80 text-zinc-400 hover:text-white transition-colors bg-[#0d0d0f] hover:bg-zinc-900/50 flex justify-between items-center">
-                  Advanced Protections
-                  <span className="text-[10px] transition-transform group-open:rotate-180">▼</span>
+            {/* Advanced Defenses */}
+            <details className="group border border-white/5 rounded-xl bg-zinc-900/30 overflow-hidden shadow-sm" open>
+               <summary className="text-xs font-bold uppercase tracking-wider px-5 py-4 cursor-pointer select-none border-b border-transparent group-open:border-white/5 text-zinc-300 hover:text-white transition-colors bg-zinc-900 hover:bg-zinc-800/80 flex justify-between items-center">
+                  <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> Advanced Protections</span>
+                  <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180 text-zinc-500" />
                </summary>
-               <div className="p-4 space-y-4 bg-[#0a0a0c]">
-                 <div className="flex justify-between items-center">
-                   <span className="text-xs text-zinc-300">Self Defending</span>
-                   <Toggle checked={selfDefending} onChange={() => { setSelfDefending(!selfDefending); setServerRam('Custom'); }} />
-                 </div>
-                 <div className="flex justify-between items-center">
-                   <span className="text-xs text-zinc-300">Debug Protection</span>
-                   <Toggle checked={debugProtection} onChange={() => { setDebugProtection(!debugProtection); setServerRam('Custom'); }} />
-                 </div>
-                 <div className="flex justify-between items-center">
-                   <div className="flex flex-col">
-                     <span className="text-xs text-zinc-300">Anti-LLM Defenses</span>
-                     <span className="text-[9px] text-zinc-500">Semantic Poisoning & Key Transforms</span>
-                   </div>
-                   <Toggle checked={antiLLM} onChange={() => { setAntiLLM(!antiLLM); setServerRam('Custom'); }} />
-                 </div>
-                 <div className="flex justify-between items-center">
-                   <div className="flex flex-col">
-                     <span className="text-xs text-zinc-300">WebCrack Protection</span>
-                     <span className="text-[9px] text-zinc-500">Chains wrappers & splits structures</span>
-                   </div>
-                   <Toggle checked={antiDeobfuscator} onChange={() => { setAntiDeobfuscator(!antiDeobfuscator); setServerRam('Custom'); }} />
-                 </div>
-                 <p className="text-[9px] text-yellow-500/80 leading-relaxed italic text-center mt-2 border-t border-zinc-800/50 pt-3">
-                   Bytecode Virtualization (VM) සක්රීය කිරීමේදී කේතයේ වේගය අඩුවිය හැක.
-                 </p>
+               <div className="p-5 space-y-6 bg-black/20">
+                 <Toggle 
+                   label="Self Defending" 
+                   description="Prevents formatting and modifications"
+                   checked={selfDefending} 
+                   onChange={() => { setSelfDefending(!selfDefending); setServerRam('Custom'); }} 
+                 />
+                 <Toggle 
+                   label="Debug Protection" 
+                   description="Crashes browser DevTools"
+                   checked={debugProtection} 
+                   onChange={() => { setDebugProtection(!debugProtection); setServerRam('Custom'); }} 
+                 />
+                 <Toggle 
+                   label="Anti-LLM Defenses" 
+                   description="Semantic poisoning & key transforms"
+                   checked={antiLLM} 
+                   onChange={() => { setAntiLLM(!antiLLM); setServerRam('Custom'); }} 
+                 />
+                 <Toggle 
+                   label="WebCrack Protection" 
+                   description="Chains wrappers & splits structures"
+                   checked={antiDeobfuscator} 
+                   onChange={() => { setAntiDeobfuscator(!antiDeobfuscator); setServerRam('Custom'); }} 
+                 />
                </div>
             </details>
 
-            <details className="group border border-emerald-800/80 rounded-lg bg-emerald-900/10 overflow-hidden">
-               <summary className="text-xs font-bold uppercase tracking-wider px-4 py-3 cursor-pointer select-none border-b border-transparent group-open:border-emerald-800/80 text-emerald-400 hover:text-emerald-300 transition-colors bg-[#0d0d0f] hover:bg-emerald-900/20 flex justify-between items-center">
-                  Copyright Settings
-                  <span className="text-[10px] transition-transform group-open:rotate-180">▼</span>
+            {/* Copyright Settings */}
+            <details className="group border border-emerald-900/50 rounded-xl bg-emerald-950/10 overflow-hidden shadow-sm mb-6">
+               <summary className="text-xs font-bold uppercase tracking-wider px-5 py-4 cursor-pointer select-none border-b border-transparent group-open:border-emerald-900/50 text-emerald-400 hover:text-emerald-300 transition-colors bg-emerald-950/20 hover:bg-emerald-900/30 flex justify-between items-center">
+                  <span className="flex items-center gap-2"><Lock className="w-4 h-4" /> Copyright Injection</span>
+                  <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180 text-emerald-600" />
                </summary>
-               <div className="p-4 space-y-4 bg-[#0a0a0c]">
-                 <div className="flex justify-between items-center">
-                   <span className="text-xs text-zinc-300">Enable Copyright</span>
-                   <Toggle checked={enableCopyright} onChange={() => setEnableCopyright(!enableCopyright)} />
-                 </div>
+               <div className="p-5 space-y-5 bg-black/40">
+                 <Toggle 
+                   label="Enable Copyright" 
+                   description="Inject custom DRM metadata"
+                   checked={enableCopyright} 
+                   onChange={() => setEnableCopyright(!enableCopyright)} 
+                 />
                  
                  {enableCopyright && (
-                   <div className="space-y-4 pt-2 border-t border-zinc-800/50">
+                   <div className="space-y-5 pt-4 border-t border-emerald-900/30 animate-in fade-in slide-in-from-top-2 duration-300">
                      <div className="space-y-2">
-                       <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Copyright Message</label>
+                       <label className="text-xs font-medium text-emerald-200/80">Message Content</label>
                        <textarea 
                          value={copyrightMessage} 
                          onChange={(e) => setCopyrightMessage(e.target.value)} 
-                         className="w-full h-24 bg-zinc-900 border border-zinc-700/50 rounded-lg p-2 text-[10px] text-zinc-300 font-mono resize-none focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 custom-scrollbar"
+                         className="w-full h-28 bg-zinc-950 border border-emerald-900/50 rounded-lg p-3 text-xs text-zinc-300 font-mono resize-none focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 custom-scrollbar shadow-inner"
                          placeholder="Copyright (c) 2024..."
                        />
                      </div>
                      
                      <div className="space-y-3">
                        <div className="flex justify-between items-center">
-                         <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Injections per File</label>
-                         <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono">{copyrightCount}</span>
+                         <label className="text-xs font-medium text-emerald-200/80">Injections per File</label>
+                         <span className="text-xs px-2 py-1 rounded-md bg-emerald-500/20 text-emerald-400 font-mono border border-emerald-500/30">{copyrightCount}</span>
                        </div>
                        <input 
                          type="range" 
                          min="1" max="10" 
                          value={copyrightCount} 
                          onChange={(e) => setCopyrightCount(Number(e.target.value))} 
-                         className="w-full accent-emerald-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer" 
+                         className="w-full accent-emerald-500 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer" 
                        />
-                       <p className="text-[9px] text-zinc-500 leading-tight">
-                         එක් කේත ගොනුවක් / Script එකක් තුළ කොපමණ ස්ථාන වල මෙම පණිවිඩය ඇතුලත් විය යුතුද යන්න තෝරන්න.
+                       <p className="text-[11px] text-zinc-500 leading-relaxed">
+                         Determines how many times the copyright block is scattered throughout each processed script.
                        </p>
                      </div>
                    </div>
                  )}
                </div>
             </details>
-
+            <div className="h-4"></div> {/* Bottom padding */}
           </div>
         </aside>
 
         {/* MIDDLE SIDEBAR - FILES */}
-        <section className="w-60 shrink-0 border-r border-zinc-800 bg-[#09090b] flex flex-col h-full overflow-hidden">
-          <div className="p-4 text-[11px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 shrink-0">
-            ගොනු ලැයිස්තුව (ZIP Files)
+        <section className="w-64 xl:w-72 shrink-0 border-r border-white/5 bg-zinc-950/30 flex flex-col h-full overflow-hidden z-30">
+          <div className="p-5 flex items-center gap-2 text-sm font-bold tracking-wide text-zinc-100 border-b border-white/5 shrink-0 bg-zinc-950/60">
+            <FolderOpen className="w-4 h-4 text-emerald-500" /> File Explorer
           </div>
-          <div className="flex-1 overflow-y-auto w-full p-2 space-y-1">
+          <div className="flex-1 overflow-y-auto w-full p-3 space-y-1.5 custom-scrollbar">
             {Object.keys(groupedFiles).length === 0 && (
-              <div className="p-4 text-xs text-zinc-600 text-center">No Snippets/ZIP</div>
+              <div className="p-8 flex flex-col items-center justify-center text-center space-y-3 opacity-50 mt-10">
+                <Archive className="w-10 h-10 text-zinc-500" />
+                <div className="text-sm font-medium text-zinc-400">No Files Loaded</div>
+                <div className="text-xs text-zinc-500">Upload a ZIP or create a snippet</div>
+              </div>
             )}
             {Object.entries(groupedFiles).map(([dir, groupFiles]) => (
               <React.Fragment key={dir}>
                 {dir !== '/' && (
-                  <div className="flex items-center gap-2 p-2 bg-zinc-800/50 rounded text-xs text-zinc-300">
-                    <span className="text-zinc-500">📁</span> {dir}
+                  <div className="flex items-center gap-2 px-2 py-3 mt-2 text-xs font-medium text-zinc-400 tracking-wide">
+                    <ChevronDown className="w-3 h-3" /> {dir}
                   </div>
                 )}
                 {groupFiles.map(f => (
                   <div 
                     key={f.path} 
                     onClick={() => setSelectedPath(f.path)}
-                    className={`flex items-center justify-between p-2 rounded text-xs pl-6 cursor-pointer group transition-colors ${
-                      selectedPath === f.path ? 'bg-emerald-500/5 border-l-2 border-emerald-500' : 'hover:bg-zinc-800'
+                    className={`flex items-center justify-between p-2.5 rounded-lg text-sm pl-4 cursor-pointer group transition-all duration-200 ${
+                      selectedPath === f.path 
+                        ? 'bg-emerald-500/10 border-l-2 border-emerald-500 text-emerald-100 shadow-sm' 
+                        : 'hover:bg-white/5 text-zinc-400 hover:text-zinc-200 border-l-2 border-transparent'
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                       {f.isIgnoredDir ? <span className="text-zinc-500 text-[10px] font-bold">DIR</span> :
-                        f.isJs ? <span className="text-yellow-500 text-[10px] font-bold">JS</span> : 
-                        f.isHtml ? <span className="text-orange-500 text-[10px] font-bold">HTML</span> :
-                        <span className="text-zinc-600 text-[10px]">FILE</span>}
-                       <span className={`truncate w-24 ${f.status === 'obfuscating' ? 'animate-pulse text-emerald-300' : f.isIgnoredDir ? 'text-zinc-500 italic' : ''}`}>{f.name}</span>
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                       {f.isIgnoredDir ? <Folder className="w-4 h-4 text-zinc-600 shrink-0" /> :
+                        f.isJs ? <FileJson className="w-4 h-4 text-yellow-500 shrink-0" /> : 
+                        f.isHtml ? <FileCode className="w-4 h-4 text-orange-500 shrink-0" /> :
+                        <FileText className="w-4 h-4 text-zinc-500 shrink-0" />}
+                       <span className={`truncate ${f.status === 'obfuscating' ? 'animate-pulse text-emerald-400' : f.isIgnoredDir ? 'text-zinc-600 italic' : ''}`}>{f.name}</span>
                     </div>
                     {!f.isIgnoredDir && (
-                      <span className={`text-[10px] ${selectedPath === f.path ? 'text-emerald-500/50' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
+                      <span className={`text-[10px] font-mono shrink-0 ml-2 ${selectedPath === f.path ? 'text-emerald-500/60' : 'text-zinc-600 group-hover:text-zinc-500'}`}>
                         {formatSize(f.size)}
                       </span>
                     )}
@@ -667,48 +731,62 @@ export default function JSObfuscatorPro() {
         </section>
 
         {/* RIGHT SECTION - EDITOR */}
-        <section className="flex-1 flex flex-col bg-[#050506] overflow-hidden">
+        <section className="flex-1 flex flex-col bg-[#050505] overflow-hidden relative shadow-[inset_10px_0_20px_rgba(0,0,0,0.5)]">
           {/* TABS & META */}
-          <div className="h-10 shrink-0 border-b border-zinc-800 flex items-center justify-between px-4 bg-zinc-900/20">
-            <div className="flex gap-4 h-full">
-              <button 
-                onClick={() => setActiveTab('original')}
-                className={`text-[11px] font-bold h-full border-b pb-0 pt-0 ${activeTab === 'original' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-zinc-500'}`}
-              >
-                ORIGINAL SOURCE
-              </button>
-              <button 
-                onClick={() => setActiveTab('obfuscated')}
-                className={`text-[11px] font-bold h-full border-b pb-0 pt-0 ${activeTab === 'obfuscated' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-zinc-500'}`}
-              >
-                OBFUSCATED PREVIEW
-              </button>
+          <div className="h-14 shrink-0 flex flex-col justify-end bg-zinc-950/90 border-b border-white/5 px-2">
+            <div className="flex justify-between items-end w-full h-full pb-0">
+              <div className="flex h-[38px] gap-1">
+                <button 
+                  onClick={() => setActiveTab('original')}
+                  className={`relative px-6 py-2 text-xs font-bold tracking-wide rounded-t-lg transition-colors ${
+                    activeTab === 'original' 
+                      ? 'bg-[#050505] text-emerald-400 border-t border-l border-r border-white/5' 
+                      : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5 border border-transparent'
+                  }`}
+                >
+                  SOURCE CODE
+                  {activeTab === 'original' && <div className="absolute top-0 left-0 right-0 h-[2px] bg-emerald-500 rounded-t-lg"></div>}
+                </button>
+                <button 
+                  onClick={() => setActiveTab('obfuscated')}
+                  className={`relative px-6 py-2 text-xs font-bold tracking-wide rounded-t-lg transition-colors ${
+                    activeTab === 'obfuscated' 
+                      ? 'bg-[#050505] text-emerald-400 border-t border-l border-r border-white/5' 
+                      : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5 border border-transparent'
+                  }`}
+                >
+                  PROTECTED OUTPUT
+                  {activeTab === 'obfuscated' && <div className="absolute top-0 left-0 right-0 h-[2px] bg-emerald-500 rounded-t-lg"></div>}
+                </button>
+              </div>
+              
+              {selectedFile && !selectedFile.isIgnoredDir && (
+                 <div className="flex items-center gap-4 mb-2 mr-4">
+                   <span className="text-xs text-zinc-500 font-mono bg-zinc-900/50 px-2 py-1 rounded border border-white/5">SIZE: {formatSize(new Blob([activeContent]).size)}</span>
+                   <button 
+                     className="flex items-center gap-1.5 hover:text-white text-xs font-medium px-3 py-1.5 rounded-md bg-zinc-800 hover:bg-zinc-700 transition-colors border border-white/5 shadow-sm group text-zinc-300" 
+                     onClick={copyToClipboard}
+                   >
+                     {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />}
+                     {copied ? <span className="text-emerald-400">COPIED</span> : 'COPY CODE'}
+                   </button>
+                 </div>
+              )}
             </div>
-            {selectedFile && (
-               <div className="flex items-center gap-3 text-[11px] text-zinc-600 font-mono">
-                 <button className="hover:text-white px-2 py-0.5 rounded bg-zinc-800/50 hover:bg-zinc-700 transition" onClick={() => {
-                   navigator.clipboard.writeText(activeContent);
-                   alert('Copied to clipboard!');
-                 }}>
-                   COPY CODE
-                 </button>
-                 <span>SIZE: {formatSize(new Blob([activeContent]).size)}</span>
-               </div>
-            )}
           </div>
 
           {/* CODE AREA */}
-          <div className="flex-1 p-6 font-mono text-sm leading-relaxed overflow-hidden relative">
+          <div className="flex-1 p-6 font-mono text-[13px] leading-[1.6] overflow-hidden relative bg-[#050505]">
             {/* Line Numbers */}
             {!(activeTab === 'original' && selectedFile?.isSnippet) && (
-              <div className="absolute left-0 top-0 bottom-0 w-12 bg-zinc-900/10 border-r border-zinc-800/50 flex flex-col items-center pt-6 text-zinc-700 text-[10px] overflow-hidden pointer-events-none z-10">
+              <div className="absolute left-0 top-0 bottom-0 w-12 bg-zinc-950/50 border-r border-white/5 flex flex-col items-end pr-3 pt-6 text-zinc-700 text-[11px] overflow-hidden pointer-events-none z-10 font-mono">
                 {Array.from({ length: displayLinesCount }).map((_, i) => (
-                  <div key={i} className="leading-relaxed h-[22px]">{i + 1}</div>
+                  <div key={i} className="leading-[1.6] h-[20.8px]">{i + 1}</div>
                 ))}
               </div>
             )}
             
-            {/* Code */}
+            {/* Code Content */}
             {activeTab === 'original' && selectedFile?.isSnippet ? (
               <textarea
                 value={selectedFile.content}
@@ -720,22 +798,25 @@ export default function JSObfuscatorPro() {
                     size: new Blob([newContent]).size 
                   }]);
                 }}
-                className="pl-4 pt-0 text-emerald-400/80 overflow-y-auto w-full h-full pb-12 outline-none whitespace-pre break-all custom-scrollbar bg-transparent resize-none leading-relaxed"
+                className="pl-2 pt-0 text-zinc-300 overflow-y-auto w-full h-full pb-12 outline-none whitespace-pre break-all custom-scrollbar bg-transparent resize-none focus:ring-0 placeholder-zinc-700"
                 spellCheck={false}
               />
             ) : (
-              <pre className="pl-14 pt-0 text-zinc-400 overflow-y-auto w-full h-full pb-12 outline-none whitespace-pre-wrap break-all custom-scrollbar">
+              <pre className="pl-12 pt-0 text-zinc-300 overflow-y-auto w-full h-full pb-12 outline-none whitespace-pre-wrap break-all custom-scrollbar">
                 <code>{activeContent}</code>
               </pre>
             )}
 
             {/* In-progress Notice */}
             {isObfuscating && (
-              <div className="absolute bottom-8 right-8 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg max-w-xs backdrop-blur-md shadow-2xl z-20">
-                 <h4 className="text-emerald-400 text-xs font-bold mb-1">AST-Based Protection Active</h4>
-                 <p className="text-[10px] text-zinc-500 leading-tight">Babel parser සාර්ථකව AST එක නිර්මාණය කර ඇත. Control flow එක වෙනස් කරමින් පවතී...</p>
-                 <div className="h-1 w-full bg-emerald-500/20 mt-3 rounded overflow-hidden">
-                    <div className="h-full bg-emerald-500 w-1/2 animate-[progress_1s_ease-in-out_infinite]"></div>
+              <div className="absolute bottom-10 right-10 p-5 bg-zinc-950/80 border border-emerald-500/30 rounded-xl max-w-sm backdrop-blur-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] z-20">
+                 <div className="flex items-center gap-3 mb-2">
+                   <Settings className="w-5 h-5 text-emerald-400 animate-spin" />
+                   <h4 className="text-emerald-400 text-sm font-bold tracking-wide">AST Transformation Active</h4>
+                 </div>
+                 <p className="text-xs text-zinc-400 leading-relaxed mb-4 pl-8">Analyzing syntax trees and applying polymorphic structures. This may take a few moments...</p>
+                 <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden shadow-inner ml-8 max-w-[90%]">
+                    <div className="h-full bg-gradient-to-r from-emerald-600 to-teal-400 w-1/2 animate-[progress_1.5s_ease-in-out_infinite] rounded-full"></div>
                  </div>
               </div>
             )}
@@ -745,25 +826,40 @@ export default function JSObfuscatorPro() {
       </main>
 
       {/* FOOTER */}
-      <footer className="shrink-0 h-8 border-t border-zinc-800 bg-[#0d0d0f] flex items-center justify-between px-4 text-[10px] font-mono text-zinc-500">
-        <div>{stats}</div>
-        <div className="flex gap-4">
-          <span>@babel/parser v7.22.5</span>
-          <span className="text-emerald-600 flex items-center gap-1">● ENCRYPTED</span>
+      <footer className="shrink-0 h-9 border-t border-white/5 bg-zinc-950 flex items-center justify-between px-6 text-xs font-mono text-zinc-500 z-50">
+        <div className="flex items-center gap-2">
+          <ActivityPulse /> {stats}
+        </div>
+        <div className="flex gap-6">
+          <span className="flex items-center gap-1.5"><Code2 className="w-3 h-3" /> Babel Parser v7.22.5</span>
+          <span className="text-emerald-500 flex items-center gap-1.5 font-bold">
+            <Lock className="w-3 h-3" /> SECURE MODE
+          </span>
         </div>
       </footer>
       
-      {/* Global CSS injections for specific tweaks if needed */}
+      {/* Global CSS injections */}
       <style dangerouslySetInnerHTML={{__html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 10px; height: 10px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 5px; border: 2px solid transparent; background-clip: padding-box; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #3f3f46; }
         @keyframes progress {
            0% { width: 0%; transform: translateX(-100%); }
            100% { width: 100%; transform: translateX(200%); }
+        }
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
         }
       `}} />
     </div>
   );
 }
+
+// Simple pulse animation component
+const ActivityPulse = () => (
+  <span className="relative flex h-2 w-2 mr-2">
+    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+  </span>
+);
