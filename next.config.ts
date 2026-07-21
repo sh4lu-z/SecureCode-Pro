@@ -19,6 +19,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  serverExternalPackages: ['@babel/core', '@babel/parser', '@babel/traverse', '@babel/generator', '@babel/types'],
   output: 'standalone',
   webpack: (config, {dev}) => {
     // HMR is disabled in AI Studio via DISABLE_HMR env var.

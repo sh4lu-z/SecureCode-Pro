@@ -7,6 +7,7 @@
  * making the output immune to WebCrack and resistant to LLM analysis.
  */
 
+// @ts-ignore
 import { transformSync } from '@babel/core';
 import stringEncryptionPlugin from './plugins/string-encryption';
 import controlFlowPlugin from './plugins/control-flow';
