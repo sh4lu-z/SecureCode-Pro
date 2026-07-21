@@ -68,6 +68,13 @@ export default function JSObfuscatorPro() {
   const [copyrightMessage, setCopyrightMessage] = useState('=======================================\nCOPYRIGHT © ' + new Date().getFullYear() + ' - ALL RIGHTS RESERVED.\nUNAUTHORIZED COPYING IS STRICTLY PROHIBITED.\n=======================================');
   const [copyrightCount, setCopyrightCount] = useState(1);
 
+  // Custom Babel Plugin State
+  const [customStringCipher, setCustomStringCipher] = useState(true);
+  const [customControlFlow, setCustomControlFlow] = useState(true);
+  const [opaquePredicates, setOpaquePredicates] = useState(true);
+  const [integrityGuard, setIntegrityGuard] = useState(false);
+  const [llmContextFlood, setLlmContextFlood] = useState(true);
+
   const handleRamChange = (ram: string) => {
     setServerRam(ram);
     if (ram === '512MB') {
@@ -316,6 +323,13 @@ export default function JSObfuscatorPro() {
             identifiersPrefix: prefix,
             ignoreRequireImports: true,
             target: 'browser-no-eval' // Fixes CSP and eval() related crashes
+          },
+          customPlugins: {
+            stringEncryption: customStringCipher,
+            controlFlow: customControlFlow,
+            opaquePredicates: opaquePredicates,
+            integrityCheck: integrityGuard,
+            llmPoisoning: llmContextFlood
           }
         })
       });
@@ -460,7 +474,7 @@ export default function JSObfuscatorPro() {
           </div>
           <div>
             <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-              JS-OBFUSCATOR <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-mono border border-emerald-500/20">PRO v2.4</span>
+              JS-OBFUSCATOR <span className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 text-[10px] font-mono border border-purple-500/20">PRO v3.0</span>
             </h1>
             <p className="text-[10px] text-zinc-500 font-medium tracking-wide">ENTERPRISE-GRADE JAVASCRIPT PROTECTION</p>
           </div>
@@ -627,6 +641,46 @@ export default function JSObfuscatorPro() {
                    description="Chains wrappers & splits structures"
                    checked={antiDeobfuscator} 
                    onChange={() => { setAntiDeobfuscator(!antiDeobfuscator); setServerRam('Custom'); }} 
+                 />
+               </div>
+            </details>
+
+            {/* Babel Custom Protections */}
+            <details className="group border border-purple-900/50 rounded-xl bg-purple-950/10 overflow-hidden shadow-sm mb-6">
+               <summary className="text-xs font-bold uppercase tracking-wider px-5 py-4 cursor-pointer select-none border-b border-transparent group-open:border-purple-900/50 text-purple-400 hover:text-purple-300 transition-colors bg-purple-950/20 hover:bg-purple-900/30 flex justify-between items-center">
+                  <span className="flex items-center gap-2"><Code2 className="w-4 h-4" /> Babel Protections</span>
+                  <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180 text-purple-600" />
+               </summary>
+               <div className="p-5 space-y-6 bg-black/40">
+                 <Toggle 
+                   label="Custom String Cipher" 
+                   description="XOR encryption immune to WebCrack"
+                   checked={customStringCipher} 
+                   onChange={() => { setCustomStringCipher(!customStringCipher); }} 
+                 />
+                 <Toggle 
+                   label="Custom Control Flow" 
+                   description="Proprietary dispatch-table flattening"
+                   checked={customControlFlow} 
+                   onChange={() => { setCustomControlFlow(!customControlFlow); }} 
+                 />
+                 <Toggle 
+                   label="Opaque Predicates" 
+                   description="Math-based undead code injection"
+                   checked={opaquePredicates} 
+                   onChange={() => { setOpaquePredicates(!opaquePredicates); }} 
+                 />
+                 <Toggle 
+                   label="Integrity Guard" 
+                   description="Self-validation checksum (anti-tamper)"
+                   checked={integrityGuard} 
+                   onChange={() => { setIntegrityGuard(!integrityGuard); }} 
+                 />
+                 <Toggle 
+                   label="LLM Context Flood" 
+                   description="Fake logic injection to confuse AI"
+                   checked={llmContextFlood} 
+                   onChange={() => { setLlmContextFlood(!llmContextFlood); }} 
                  />
                </div>
             </details>
