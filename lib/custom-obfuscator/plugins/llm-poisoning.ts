@@ -26,7 +26,7 @@ function randomHex(): string {
 
 function randomApiKey(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = 'sk_live_';
+  let result = 'api_live_';
   for (let i = 0; i < 32; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
